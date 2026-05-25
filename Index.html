@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>mateee</title>
+    <meta property="og:title" content="mateee">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#000000">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12 1.5l2.6 1.1 2.8-.5 1.7 2.3 2.7 1.1-.3 2.8 2.2 1.8-1.2 2.6 1.2 2.6-2.2 1.8.3 2.8-2.7 1.1-1.7 2.3-2.8-.5-2.6 1.1-2.6-1.1-2.8.5-1.7-2.3-2.7-1.1.3-2.8-2.2-1.8 1.2-2.6-1.2-2.6 2.2-1.8-.3-2.8 2.7-1.1 1.7-2.3 2.8.5z'/%3E%3Cpath fill='white' d='M10 15.5l-4-4 1.5-1.5 2.5 2.5 6-6 1.5 1.5z'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M12 1.5l2.6 1.1 2.8-.5 1.7 2.3 2.7 1.1-.3 2.8 2.2 1.8-1.2 2.6 1.2 2.6-2.2 1.8.3 2.8-2.7 1.1-1.7 2.3-2.8-.5-2.6 1.1-2.6-1.1-2.8.5-1.7-2.3-2.7-1.1.3-2.8-2.2-1.8 1.2-2.6-1.2-2.6 2.2-1.8-.3-2.8 2.7-1.1 1.7-2.3 2.8.5z'/%3E%3Cpath fill='white' d='M10 15.5l-4-4 1.5-1.5 2.5 2.5 6-6 1.5 1.5z'/%3E%3C/svg%3E">
+    
+    <style>
+        @font-face {
+            font-family: mono;
+            src: url(mono.ttf);
+        }
+        @font-face {
+            font-family: derk;
+            src: url(derk.otf);
+        }
+        
+        :root {
+            --main-text-color: #ffffff;
+            --main-text-shadow: 0 4px 15px rgba(0, 0, 0, 1), 0 0 5px rgba(0, 0, 0, 0.8);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: mono, sans-serif;
+            background: #000;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .unselectable {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .undraggable {
+            -webkit-user-drag: none;
+            -khtml-user-drag: none;
+            -moz-user-drag: none;
+            -o-user-drag: none;
+            user-drag: none;
+        }
+
+        .bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 1;
+            transform: translateZ(0); 
+            -webkit-transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000;
+            pointer-events: none;
+        }
+
+        .video-overlay-tint {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s;
+        }
+
+        .overlay label {
+            color: #fff;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .overlay-text {
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .no-hover { display: block; }
+        .hover { display: none; }
+        
+        @media(hover:hover) {
+            .hover { display: block; }
+            .no-hover { display: none; }
+        }
+
+        #overlay-toggle {
+            display: none;
+        }
+
+        #overlay-toggle:checked ~ .overlay {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .text-content {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            padding: 0 20px;
+        }
+
+        .main-title {
+            font-family: derk, sans-serif;
+            color: var(--main-text-color);
+            text-shadow: var(--main-text-shadow);
+            font-size: clamp(3.5rem, 12vw, 6rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: 3px;
+            pointer-events: none;
+        }
+
+        .socials {
+            display: flex;
+            gap: clamp(20px, 5vw, 40px);
+            z-index: 15;
+        }
+
+        .social-link {
+            text-decoration: none;
+            font-size: clamp(1rem, 3.5vw, 1.2rem);
+            color: #ccc;
+            text-shadow: 0 2px 5px rgba(0,0,0,1);
+            transition: color 0.3s ease, transform 0.3s ease, text-shadow 0.3s ease;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .social-link:hover {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            transform: scale(1.08);
+        }
+
+        .controls-container {
+            position: fixed;
+            bottom: clamp(20px, 5vh, 40px);
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: clamp(8px, 1.5vw, 15px);
+            background: rgba(0, 0, 0, 0.75);
+            padding: 12px 24px;
+            border-radius: 40px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease, transform 0.3s ease;
+            width: max-content;
+            max-width: 95vw;
+        }
+
+        #overlay-toggle:checked ~ .controls-container {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .controls-container:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: translateX(-50%) scale(1.02);
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.3);
+            margin: 0 clamp(5px, 1vw, 15px);
+        }
+
+        .time-display {
+            color: #fff;
+            font-size: clamp(0.75rem, 1.5vw, 0.95rem);
+            letter-spacing: 1px;
+            font-variant-numeric: tabular-nums;
+            opacity: 0.9;
+            white-space: nowrap;
+        }
+
+        .control-slider {
+            -webkit-appearance: none;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .control-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0,0,0,0.8);
+            transition: transform 0.2s;
+        }
+
+        .control-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        #progress-slider {
+            width: clamp(100px, 25vw, 300px);
+        }
+
+        #volume-slider {
+            width: clamp(50px, 10vw, 80px);
+        }
+
+        .control-icon {
+            color: #fff;
+            font-size: clamp(1rem, 2vw, 1.3rem);
+            cursor: pointer;
+            width: 24px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .control-icon:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 600px) {
+            .controls-container {
+                padding: 10px 20px;
+                width: 90vw;
+                justify-content: space-between;
+            }
+            #volume-slider, #mute-icon, .divider {
+                display: none;
+            }
+            #progress-slider {
+                flex: 1;
+                margin: 0 10px;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <input type="checkbox" id="overlay-toggle">
+
+    <div class="overlay">
+        <label for="overlay-toggle" onclick="startMedia()">
+            <span class="no-hover overlay-text unselectable undraggable">Tap to enter...</span>
+            <span class="hover overlay-text unselectable undraggable">Tap to enter...</span>
+        </label>
+    </div>
+
+    <div class="video-overlay-tint"></div>
+
+    <video loop playsinline webkit-playsinline preload="auto" muted class="bg-video unselectable undraggable" id="video">
+        <source src="Video.mp4" type="video/mp4">
+    </video>
+
+    <div class="controls-container">
+        <span class="control-icon unselectable undraggable" onclick="togglePlay()" id="play-pause-btn">⏸</span>
+        <input type="range" min="0" max="100" step="0.1" value="0" class="control-slider unselectable undraggable" id="progress-slider" oninput="seekVideo(this.value)">
+        <span class="time-display unselectable undraggable" id="time-display">0:00 / 0:00</span>
+        
+        <div class="divider"></div>
+        
+        <span class="control-icon unselectable undraggable" onclick="toggleMute()" id="mute-icon">🔊</span>
+        <input type="range" min="0" max="1" step="0.01" value="0.5" class="control-slider unselectable undraggable" id="volume-slider" oninput="updateVolume(this.value)">
+    </div>
+
+    <main class="text-content">
+        <h1 class="unselectable undraggable main-title">mateee</h1>
+        <div class="socials">
+            <a href="https://www.instagram.com/n.a.g.y.m.a.t.t.e?igsh=N2dpdXp6bHRyYjJt&utm_source=qr" class="unselectable undraggable social-link">Instagram</a>
+            <a href="https://www.tiktok.com/@mateww__?_r=1&_t=ZN-96fNFKdJZax" class="unselectable undraggable social-link">TikTok</a>
+        </div>
+    </main>
+
+    <script>
+        const video = document.getElementById("video");
+        const volumeSlider = document.getElementById("volume-slider");
+        const progressSlider = document.getElementById("progress-slider");
+        const muteIcon = document.getElementById("mute-icon");
+        const playPauseBtn = document.getElementById("play-pause-btn");
+        const timeDisplay = document.getElementById("time-display");
+        const overlayToggle = document.getElementById("overlay-toggle");
+        
+        let lastVolume = 0.5;
+        let formattedDuration = "0:00";
+
+        if (video) {
+            video.addEventListener('loadedmetadata', () => {
+                let minutes = Math.floor(video.duration / 60);
+                let seconds = Math.floor(video.duration % 60);
+                formattedDuration = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+                timeDisplay.innerText = "0:00 / " + formattedDuration;
+            });
+        }
+
+        function startMedia() {
+            if (video) {
+                video.currentTime = 0;
+                video.muted = false;
+                video.volume = volumeSlider.value;
+                
+                let playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        playPauseBtn.innerText = "⏸";
+                    }).catch(error => {
+                        console.warn("Hangos lejátszás blokkolva, próbálkozás némítva...", error);
+                        video.muted = true;
+                        video.play().then(() => {
+                            playPauseBtn.innerText = "⏸";
+                            volumeSlider.value = 0;
+                            updateVolume(0);
+                        }).catch(err => console.error("A videót egyáltalán nem sikerült elindítani", err));
+                    });
+                }
+            }
+        }
+
+        function togglePlay() {
+            if (video) {
+                if (video.paused) {
+                    video.play();
+                    playPauseBtn.innerText = "⏸";
+                } else {
+                    video.pause();
+                    playPauseBtn.innerText = "▶";
+                }
+            }
+        }
+
+        function seekVideo(val) {
+            if (video && video.duration) {
+                video.currentTime = (val / 100) * video.duration;
+            }
+        }
+
+        function updateVolume(val) {
+            if (video) {
+                video.volume = val;
+                video.muted = false; 
+            }
+            if (val == 0) {
+                muteIcon.innerText = "🔇";
+            } else if (val < 0.5) {
+                muteIcon.innerText = "🔉";
+            } else {
+                muteIcon.innerText = "🔊";
+            }
+        }
+
+        function toggleMute() {
+            if (video) {
+                if (video.volume > 0) {
+                    lastVolume = video.volume;
+                    volumeSlider.value = 0;
+                    updateVolume(0);
+                } else {
+                    volumeSlider.value = lastVolume || 0.5;
+                    updateVolume(lastVolume || 0.5);
+                }
+            }
+        }
+
+        if (video) {
+            video.addEventListener('timeupdate', () => {
+                let minutes = Math.floor(video.currentTime / 60);
+                let seconds = Math.floor(video.currentTime % 60);
+                let formattedTime = minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+                
+                timeDisplay.innerText = formattedTime + " / " + formattedDuration;
+                
+                if (video.duration) {
+                    progressSlider.value = (video.currentTime / video.duration) * 100;
+                }
+            });
+
+            video.addEventListener('play', () => {
+                playPauseBtn.innerText = "⏸";
+            });
+
+            video.addEventListener('pause', () => {
+                playPauseBtn.innerText = "▶";
+            });
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                if (overlayToggle.checked) {
+                    event.preventDefault();
+                    togglePlay();
+                }
+            }
+        });
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+    </script>
+</body>
+</html>
