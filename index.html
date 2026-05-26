@@ -259,18 +259,25 @@
 
         .control-icon {
             color: #fff;
-            font-size: clamp(1rem, 2vw, 1.3rem);
             cursor: pointer;
             width: 24px;
-            text-align: center;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: transform 0.2s;
+        }
+
+        .control-icon svg {
+            width: 100%;
+            height: 100%;
         }
 
         .control-icon:hover {
             transform: scale(1.1);
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 600px), (hover: none) and (pointer: coarse) {
             .controls-container {
                 padding: 10px 20px;
                 width: 90vw;
@@ -305,13 +312,17 @@
     </video>
 
     <div class="controls-container">
-        <span class="control-icon unselectable undraggable" onclick="togglePlay()" id="play-pause-btn">⏸</span>
+        <span class="control-icon unselectable undraggable" onclick="togglePlay()" id="play-pause-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </span>
         <input type="range" min="0" max="100" step="0.1" value="0" class="control-slider unselectable undraggable" id="progress-slider" oninput="seekVideo(this.value)">
         <span class="time-display unselectable undraggable" id="time-display">0:00 / 0:00</span>
         
         <div class="divider"></div>
         
-        <span class="control-icon unselectable undraggable" onclick="toggleMute()" id="mute-icon">🔊</span>
+        <span class="control-icon unselectable undraggable" onclick="toggleMute()" id="mute-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+        </span>
         <input type="range" min="0" max="1" step="0.01" value="0.5" class="control-slider unselectable undraggable" id="volume-slider" oninput="updateVolume(this.value)">
     </div>
 
@@ -335,6 +346,12 @@
         let lastVolume = 0.5;
         let formattedDuration = "0:00";
 
+        const svgPlay = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
+        const svgPause = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+        const svgVolHigh = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+        const svgVolLow = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>';
+        const svgVolMute = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>';
+
         if (video) {
             video.addEventListener('loadedmetadata', () => {
                 let minutes = Math.floor(video.duration / 60);
@@ -353,15 +370,14 @@
                 let playPromise = video.play();
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
-                        playPauseBtn.innerText = "⏸";
-                    }).catch(error => {
-                        console.warn("Hangos lejátszás blokkolva, próbálkozás némítva...", error);
+                        playPauseBtn.innerHTML = svgPause;
+                    }).catch(() => {
                         video.muted = true;
                         video.play().then(() => {
-                            playPauseBtn.innerText = "⏸";
+                            playPauseBtn.innerHTML = svgPause;
                             volumeSlider.value = 0;
                             updateVolume(0);
-                        }).catch(err => console.error("A videót egyáltalán nem sikerült elindítani", err));
+                        }).catch(() => {});
                     });
                 }
             }
@@ -371,10 +387,10 @@
             if (video) {
                 if (video.paused) {
                     video.play();
-                    playPauseBtn.innerText = "⏸";
+                    playPauseBtn.innerHTML = svgPause;
                 } else {
                     video.pause();
-                    playPauseBtn.innerText = "▶";
+                    playPauseBtn.innerHTML = svgPlay;
                 }
             }
         }
@@ -391,11 +407,11 @@
                 video.muted = false; 
             }
             if (val == 0) {
-                muteIcon.innerText = "🔇";
+                muteIcon.innerHTML = svgVolMute;
             } else if (val < 0.5) {
-                muteIcon.innerText = "🔉";
+                muteIcon.innerHTML = svgVolLow;
             } else {
-                muteIcon.innerText = "🔊";
+                muteIcon.innerHTML = svgVolHigh;
             }
         }
 
@@ -426,11 +442,11 @@
             });
 
             video.addEventListener('play', () => {
-                playPauseBtn.innerText = "⏸";
+                playPauseBtn.innerHTML = svgPause;
             });
 
             video.addEventListener('pause', () => {
-                playPauseBtn.innerText = "▶";
+                playPauseBtn.innerHTML = svgPlay;
             });
         }
 
