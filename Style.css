@@ -1,9 +1,19 @@
+@import url("https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+/* ======================================================
+   BASE
+====================================================== */
+
 :root {
-    --text: #ffffff;
-    --glass: rgba(0, 0, 0, 0.45);
-    --border: rgba(255,255,255,0.12);
-    --shadow: 0 15px 50px rgba(0,0,0,.55);
-    --transition: .3s ease;
+    --text-color: #ffffff;
+    --muted-text: rgba(255, 255, 255, 0.78);
+    --soft-border: rgba(255, 255, 255, 0.15);
+    --dark-glass: rgba(0, 0, 0, 0.72);
+    --dark-glass-hover: rgba(0, 0, 0, 0.88);
+    --shadow-strong: 0 8px 30px rgba(0, 0, 0, 0.75);
+    --text-shadow-main: 0 4px 18px rgba(0, 0, 0, 1), 0 0 8px rgba(0, 0, 0, 0.9);
+    --transition-fast: 0.25s ease;
+    --transition-medium: 0.45s ease;
 }
 
 * {
@@ -13,303 +23,674 @@
 }
 
 html {
+    width: 100%;
     height: 100%;
+    background: #000;
     -webkit-text-size-adjust: 100%;
 }
 
 body {
+    width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
-    overflow: hidden;
     background: #000;
-    color: var(--text);
+    color: var(--text-color);
     font-family: "JetBrains Mono", monospace;
+    overflow: hidden;
     position: relative;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
+/* ======================================================
+   UTILITIES
+====================================================== */
+
+.unselectable {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+button,
+input,
+a {
+    font-family: inherit;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* ======================================================
+   BACKGROUND VIDEO
+====================================================== */
 
 .background-video {
     position: fixed;
     inset: 0;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     object-fit: cover;
     z-index: 1;
     pointer-events: none;
+    background: #000;
+
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .video-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,.35);
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background:
+        radial-gradient(circle at center, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.44) 100%),
+        rgba(0, 0, 0, 0.24);
     z-index: 2;
+    pointer-events: none;
 }
 
+/* ======================================================
+   ENTRY OVERLAY
+====================================================== */
 
 .overlay {
     position: fixed;
     inset: 0;
-    background: #000;
     z-index: 9999;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
+    background: #000;
+
+    opacity: 1;
+    visibility: visible;
+
     transition:
-        opacity .6s ease,
-        visibility .6s ease;
+        opacity 0.65s ease,
+        visibility 0.65s ease;
 }
 
 .overlay.hidden {
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
 }
 
 .enter-button {
     border: none;
+    outline: none;
     background: transparent;
 
-    color: white;
-    font-family: mono, sans-serif;
+    color: #ffffff;
 
-    font-size: clamp(1rem, 3vw, 1.2rem);
+    font-size: clamp(0.95rem, 3vw, 1.18rem);
+    font-weight: 500;
     letter-spacing: 2px;
     text-transform: uppercase;
 
     cursor: pointer;
 
-    transition: .25s ease;
+    text-shadow: 0 2px 12px rgba(255, 255, 255, 0.25);
+
+    transition:
+        transform var(--transition-fast),
+        opacity var(--transition-fast),
+        text-shadow var(--transition-fast);
 }
 
 .enter-button:hover {
-    transform: scale(1.05);
+    transform: scale(1.045);
+    text-shadow: 0 0 16px rgba(255, 255, 255, 0.45);
 }
 
+.enter-button:active {
+    transform: scale(0.98);
+}
 
-.main-container {
-    position: relative;
-    z-index: 5;
+/* ======================================================
+   VIEW COUNTER
+====================================================== */
 
-    width: 100%;
-    height: 100vh;
+.views-container {
+    position: fixed;
+    top: max(16px, env(safe-area-inset-top));
+    left: max(16px, env(safe-area-inset-left));
+
+    z-index: 50;
 
     display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 38px;
+    padding: 8px 15px;
+
+    background: rgba(0, 0, 0, 0.68);
+
+    border: 1px solid var(--soft-border);
+    border-radius: 999px;
+
+    color: #ffffff;
+
+    font-size: clamp(0.78rem, 2vw, 0.93rem);
+    font-weight: 500;
+    letter-spacing: 0.8px;
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    box-shadow: var(--shadow-strong);
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity 0.6s ease,
+        visibility 0.6s ease,
+        transform 0.25s ease;
+}
+
+.views-container.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.views-container:hover {
+    transform: scale(1.03);
+}
+
+.views-icon {
+    width: 18px;
+    height: 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    opacity: 0.92;
+}
+
+.views-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* ======================================================
+   CENTER CONTENT - OLD STYLE
+====================================================== */
+
+.text-content {
+    position: relative;
+    z-index: 10;
+
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
 
     padding:
         max(20px, env(safe-area-inset-top))
-        20px
-        max(20px, env(safe-area-inset-bottom))
-        20px;
+        max(20px, env(safe-area-inset-right))
+        max(95px, env(safe-area-inset-bottom))
+        max(20px, env(safe-area-inset-left));
+
+    text-align: center;
 }
-
-
-.content-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
-    gap: 22px;
-
-    width: min(95vw, 550px);
-
-    padding: 35px;
-
-    background: var(--glass);
-
-    border: 1px solid var(--border);
-
-    border-radius: 24px;
-
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-
-    box-shadow: var(--shadow);
-}
-
 
 .main-title {
-    font-family: "Anton", sans-serif;
+    font-family: "Anton", Impact, sans-serif;
 
-    font-size: clamp(3.2rem, 9vw, 6rem);
+    color: var(--text-color);
 
-    letter-spacing: 3px;
+    font-size: clamp(4rem, 13vw, 7.4rem);
+    font-weight: 400;
+    line-height: 0.95;
 
-    color: white;
+    letter-spacing: 4px;
 
-    text-shadow:
-        0 0 10px rgba(0,0,0,.8),
-        0 0 20px rgba(0,0,0,.8),
-        0 0 35px rgba(0,0,0,.6);
+    text-shadow: var(--text-shadow-main);
 
-    user-select: none;
+    margin-bottom: clamp(14px, 2.4vh, 24px);
+
+    pointer-events: none;
 }
 
+/* ======================================================
+   SOCIAL LINKS WITH SVG ICONS
+====================================================== */
 
-.social-links {
+.socials {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     justify-content: center;
-    gap: 18px;
+    flex-wrap: wrap;
+
+    gap: clamp(16px, 4vw, 36px);
+
+    max-width: 92vw;
 }
 
 .social-link {
-    color: rgba(255,255,255,.85);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    color: var(--muted-text);
 
     text-decoration: none;
 
+    font-size: clamp(0.9rem, 2.4vw, 1.08rem);
+    font-weight: 500;
+
     text-transform: uppercase;
+    letter-spacing: 1.1px;
 
-    letter-spacing: 1px;
-
-    font-size: clamp(.9rem, 2vw, 1.05rem);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 1);
 
     transition:
-        color var(--transition),
-        transform var(--transition);
+        color var(--transition-fast),
+        transform var(--transition-fast),
+        text-shadow var(--transition-fast),
+        opacity var(--transition-fast);
+}
+
+.social-link svg {
+    width: clamp(16px, 3.4vw, 20px);
+    height: clamp(16px, 3.4vw, 20px);
+    flex-shrink: 0;
+
+    transition:
+        transform var(--transition-fast),
+        opacity var(--transition-fast);
 }
 
 .social-link:hover {
-    color: white;
-    transform: translateY(-2px);
+    color: #ffffff;
+
+    transform: scale(1.055);
+
+    text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.45),
+        0 2px 8px rgba(0, 0, 0, 1);
 }
 
-
-.view-counter {
-    position: fixed;
-
-    top: max(20px, env(safe-area-inset-top));
-    left: 20px;
-
-    z-index: 50;
-
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    padding: 10px 16px;
-
-    background: rgba(0,0,0,.65);
-
-    border: 1px solid rgba(255,255,255,.12);
-
-    border-radius: 999px;
-
-    backdrop-filter: blur(12px);
-
-    opacity: 0;
-
-    transition: opacity .5s ease;
+.social-link:hover svg {
+    transform: scale(1.12);
 }
 
-.view-counter.visible {
-    opacity: 1;
+.social-link:active {
+    transform: scale(0.98);
 }
 
-.view-counter svg {
-    width: 18px;
-    height: 18px;
-    fill: white;
-}
-
+/* ======================================================
+   PLAYER CONTROLS - NEW BOTTOM BAR
+====================================================== */
 
 .player-controls {
     position: fixed;
 
-    bottom: max(20px, env(safe-area-inset-bottom));
     left: 50%;
+    bottom: max(20px, env(safe-area-inset-bottom));
 
     transform: translateX(-50%);
 
-    z-index: 50;
+    z-index: 55;
 
     display: flex;
     align-items: center;
-    gap: 15px;
+    justify-content: center;
 
-    padding: 12px 18px;
+    gap: clamp(10px, 2vw, 16px);
 
-    background: rgba(0,0,0,.7);
+    width: max-content;
+    max-width: calc(100vw - 30px);
 
+    padding: 12px 22px;
+
+    background: var(--dark-glass);
+
+    border: 1px solid var(--soft-border);
     border-radius: 999px;
 
-    border: 1px solid rgba(255,255,255,.12);
+    color: #ffffff;
 
-    backdrop-filter: blur(14px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    box-shadow: var(--shadow-strong);
 
     opacity: 0;
+    visibility: hidden;
 
-    transition: opacity .5s ease;
+    transition:
+        opacity 0.6s ease,
+        visibility 0.6s ease,
+        background var(--transition-fast),
+        transform var(--transition-fast);
 }
 
 .player-controls.visible {
     opacity: 1;
+    visibility: visible;
+}
+
+.player-controls:hover {
+    background: var(--dark-glass-hover);
+    transform: translateX(-50%) scale(1.018);
 }
 
 .control-button {
+    width: 25px;
+    height: 25px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
     border: none;
+    outline: none;
     background: transparent;
 
-    color: white;
-
-    font-size: 1rem;
+    color: #ffffff;
 
     cursor: pointer;
+
+    opacity: 0.92;
+
+    transition:
+        transform var(--transition-fast),
+        opacity var(--transition-fast);
+}
+
+.control-button:hover {
+    transform: scale(1.12);
+    opacity: 1;
+}
+
+.control-button:active {
+    transform: scale(0.94);
+}
+
+.control-button svg {
+    width: 100%;
+    height: 100%;
 }
 
 .time-display {
-    font-size: .9rem;
+    color: #ffffff;
+
+    font-size: clamp(0.74rem, 1.7vw, 0.92rem);
+    font-weight: 500;
+
+    letter-spacing: 0.7px;
+
+    font-variant-numeric: tabular-nums;
+
     white-space: nowrap;
+
+    opacity: 0.92;
+}
+
+.control-divider {
+    width: 1px;
+    height: 23px;
+
+    background: rgba(255, 255, 255, 0.28);
+
+    margin: 0 2px;
 }
 
 .volume-slider {
-    width: 90px;
+    -webkit-appearance: none;
+    appearance: none;
+
+    width: clamp(58px, 10vw, 88px);
+    height: 4px;
+
+    border-radius: 999px;
+
+    background: rgba(255, 255, 255, 0.32);
+
+    outline: none;
+
     cursor: pointer;
+
+    transition: background var(--transition-fast);
+}
+
+.volume-slider:hover {
+    background: rgba(255, 255, 255, 0.45);
 }
 
 .volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
 
     width: 14px;
     height: 14px;
 
     border-radius: 50%;
 
-    background: white;
+    background: #ffffff;
+
+    cursor: pointer;
+
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.75);
+
+    transition: transform var(--transition-fast);
 }
 
+.volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.18);
+}
 
-@media (max-width: 768px) {
+.volume-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
 
-    .content-card {
-        width: 95vw;
-        padding: 25px;
+    border: none;
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    cursor: pointer;
+
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.75);
+}
+
+.volume-slider::-moz-range-track {
+    height: 4px;
+
+    border-radius: 999px;
+
+    background: rgba(255, 255, 255, 0.32);
+}
+
+/* ======================================================
+   MOBILE
+====================================================== */
+
+@media (max-width: 768px), (hover: none) and (pointer: coarse) {
+    body {
+        overflow: hidden;
     }
 
+    .video-overlay {
+        background:
+            radial-gradient(circle at center, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.5) 100%),
+            rgba(0, 0, 0, 0.18);
+    }
+
+    .text-content {
+        padding:
+            max(18px, env(safe-area-inset-top))
+            16px
+            max(90px, env(safe-area-inset-bottom))
+            16px;
+    }
+
+    .main-title {
+        font-size: clamp(3.4rem, 18vw, 5.4rem);
+        letter-spacing: 3px;
+        margin-bottom: 15px;
+    }
+
+    .socials {
+        gap: 15px 22px;
+    }
+
+    .social-link {
+        font-size: clamp(0.86rem, 3.4vw, 1rem);
+        gap: 7px;
+    }
+
+    .social-link svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .views-container {
+        top: max(14px, env(safe-area-inset-top));
+        left: 14px;
+
+        padding: 7px 13px;
+
+        font-size: 0.78rem;
+    }
+
+    .views-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .player-controls {
+        bottom: max(18px, env(safe-area-inset-bottom));
+
+        padding: 11px 18px;
+
+        gap: 12px;
+    }
+
+    .control-divider,
+    #muteButton,
     .volume-slider {
         display: none;
     }
 
-    .player-controls {
-        padding: 10px 15px;
+    .control-button {
+        width: 24px;
+        height: 24px;
     }
 
-    .social-links {
-        gap: 14px;
+    .time-display {
+        font-size: 0.78rem;
     }
 }
 
+/* ======================================================
+   SMALL PHONES
+====================================================== */
 
-@media (max-width: 360px) {
-
+@media (max-width: 380px) {
     .main-title {
-        font-size: 2.8rem;
+        font-size: clamp(3rem, 17vw, 4.6rem);
+        letter-spacing: 2px;
+    }
+
+    .socials {
+        gap: 12px 18px;
     }
 
     .social-link {
-        font-size: .85rem;
+        font-size: 0.82rem;
+    }
+
+    .social-link svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .player-controls {
+        padding: 10px 15px;
+        gap: 10px;
+    }
+
+    .time-display {
+        font-size: 0.72rem;
+    }
+}
+
+/* ======================================================
+   LANDSCAPE MOBILE
+====================================================== */
+
+@media (max-height: 500px) and (orientation: landscape) {
+    .main-title {
+        font-size: clamp(2.8rem, 12vw, 4.6rem);
+        margin-bottom: 10px;
+    }
+
+    .socials {
+        gap: 12px 24px;
+    }
+
+    .text-content {
+        padding-bottom: 72px;
+    }
+
+    .player-controls {
+        bottom: 12px;
+        padding: 9px 18px;
+    }
+
+    .views-container {
+        top: 12px;
+        left: 12px;
+    }
+}
+
+/* ======================================================
+   LARGE SCREENS
+====================================================== */
+
+@media (min-width: 1400px) {
+    .main-title {
+        font-size: 7.8rem;
+    }
+
+    .social-link {
+        font-size: 1.12rem;
+    }
+}
+
+/* ======================================================
+   REDUCED MOTION
+====================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
     }
 }
