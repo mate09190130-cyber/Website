@@ -16,10 +16,29 @@
     --transition-medium: 0.45s ease;
 }
 
-* {
+/* ======================================================
+   GLOBAL RESET + NO SELECT / NO DRAG
+====================================================== */
+
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+
+    -webkit-touch-callout: none;
 }
 
 html {
@@ -33,24 +52,33 @@ body {
     width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
+
     background: #000;
     color: var(--text-color);
+
     font-family: "JetBrains Mono", monospace;
+
     overflow: hidden;
     position: relative;
+
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
 }
 
-/* ======================================================
-   UTILITIES
-====================================================== */
+/* Extra hardening for media and links */
 
-.unselectable {
+img,
+video,
+svg,
+a,
+button {
+    -webkit-user-drag: none;
+    user-drag: none;
+
     -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
+
+    -webkit-touch-callout: none;
 }
 
 button,
@@ -63,6 +91,10 @@ button {
     -webkit-tap-highlight-color: transparent;
 }
 
+a {
+    text-decoration: none;
+}
+
 /* ======================================================
    BACKGROUND VIDEO
 ====================================================== */
@@ -70,16 +102,22 @@ button {
 .background-video {
     position: fixed;
     inset: 0;
+
     width: 100vw;
     height: 100vh;
     height: 100dvh;
+
     object-fit: cover;
+
     z-index: 1;
+
     pointer-events: none;
+
     background: #000;
 
     transform: translateZ(0);
     -webkit-transform: translateZ(0);
+
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
 }
@@ -87,13 +125,17 @@ button {
 .video-overlay {
     position: fixed;
     inset: 0;
+
     width: 100vw;
     height: 100vh;
     height: 100dvh;
+
     background:
         radial-gradient(circle at center, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.44) 100%),
         rgba(0, 0, 0, 0.24);
+
     z-index: 2;
+
     pointer-events: none;
 }
 
@@ -104,6 +146,7 @@ button {
 .overlay {
     position: fixed;
     inset: 0;
+
     z-index: 9999;
 
     display: flex;
@@ -135,6 +178,7 @@ button {
 
     font-size: clamp(0.95rem, 3vw, 1.18rem);
     font-weight: 500;
+
     letter-spacing: 2px;
     text-transform: uppercase;
 
@@ -163,6 +207,7 @@ button {
 
 .views-container {
     position: fixed;
+
     top: max(16px, env(safe-area-inset-top));
     left: max(16px, env(safe-area-inset-left));
 
@@ -174,6 +219,7 @@ button {
     gap: 8px;
 
     min-height: 38px;
+
     padding: 8px 15px;
 
     background: rgba(0, 0, 0, 0.68);
@@ -185,6 +231,7 @@ button {
 
     font-size: clamp(0.78rem, 2vw, 0.93rem);
     font-weight: 500;
+
     letter-spacing: 0.8px;
 
     backdrop-filter: blur(12px);
@@ -232,6 +279,7 @@ button {
 
 .text-content {
     position: relative;
+
     z-index: 10;
 
     width: 100vw;
@@ -271,7 +319,7 @@ button {
 }
 
 /* ======================================================
-   SOCIAL LINKS WITH SVG ICONS
+   SOCIAL LINKS WITH INLINE SVG ICONS
 ====================================================== */
 
 .socials {
@@ -304,6 +352,8 @@ button {
 
     text-shadow: 0 2px 8px rgba(0, 0, 0, 1);
 
+    cursor: pointer;
+
     transition:
         color var(--transition-fast),
         transform var(--transition-fast),
@@ -314,7 +364,10 @@ button {
 .social-link svg {
     width: clamp(16px, 3.4vw, 20px);
     height: clamp(16px, 3.4vw, 20px);
+
     flex-shrink: 0;
+
+    pointer-events: none;
 
     transition:
         transform var(--transition-fast),
@@ -340,7 +393,7 @@ button {
 }
 
 /* ======================================================
-   PLAYER CONTROLS - NEW BOTTOM BAR
+   PLAYER CONTROLS - BOTTOM BAR
 ====================================================== */
 
 .player-controls {
@@ -406,6 +459,7 @@ button {
 
     border: none;
     outline: none;
+
     background: transparent;
 
     color: #ffffff;
@@ -431,6 +485,8 @@ button {
 .control-button svg {
     width: 100%;
     height: 100%;
+
+    pointer-events: none;
 }
 
 .time-display {
@@ -446,6 +502,8 @@ button {
     white-space: nowrap;
 
     opacity: 0.92;
+
+    pointer-events: none;
 }
 
 .control-divider {
@@ -455,6 +513,8 @@ button {
     background: rgba(255, 255, 255, 0.28);
 
     margin: 0 2px;
+
+    pointer-events: none;
 }
 
 .volume-slider {
