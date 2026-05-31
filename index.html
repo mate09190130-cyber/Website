@@ -420,16 +420,22 @@
 
         async function initViewCounter() {
             const viewsCountEl = document.getElementById("views-count");
-            const namespace = "mateee_website_views_global_01"; 
+            const namespace = "mateee_website_views_global_final_01"; 
             
-            const baseSession = sessionStorage.getItem("mate_session_active");
+            // Háromszoros védelem lekérése
+            const hasSession = sessionStorage.getItem("mate_visited");
+            const hasLocal = localStorage.getItem("mate_visited");
+            const hasCookie = document.cookie.includes("mate_visited=true");
 
-            if (!baseSession) {
+            if (!hasSession && !hasLocal && !hasCookie) {
                 try {
                     const response = await fetch(`https://api.counterapi.dev/v1/${namespace}/visits/up`);
                     const data = await response.json();
                     viewsCountEl.innerText = data.count;
-                    sessionStorage.setItem("mate_session_active", "true");
+                    
+                    sessionStorage.setItem("mate_visited", "true");
+                    localStorage.setItem("mate_visited", "true");
+                    document.cookie = "mate_visited=true; max-age=31536000; path=/";
                 } catch (error) {
                     viewsCountEl.innerText = "1";
                 }
@@ -438,6 +444,10 @@
                     const response = await fetch(`https://api.counterapi.dev/v1/${namespace}/visits`);
                     const data = await response.json();
                     viewsCountEl.innerText = data.count;
+                    
+                    sessionStorage.setItem("mate_visited", "true");
+                    localStorage.setItem("mate_visited", "true");
+                    if (!hasCookie) document.cookie = "mate_visited=true; max-age=31536000; path=/";
                 } catch (error) {
                     viewsCountEl.innerText = "1";
                 }
