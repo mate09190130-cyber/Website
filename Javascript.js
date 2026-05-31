@@ -1,6 +1,5 @@
 /* ======================================================
-   mateee.xyz - script.js
-   GitHub Pages compatible
+   mateee.xyz - Javascript.js
 ====================================================== */
 
 /* ======================================================
@@ -11,9 +10,6 @@ const overlay = document.getElementById("overlay");
 const enterButton = document.getElementById("enterButton");
 
 const video = document.getElementById("backgroundVideo");
-
-const viewCounter = document.getElementById("viewCounter");
-const viewCount = document.getElementById("viewCount");
 
 const playerControls = document.getElementById("playerControls");
 const playPauseButton = document.getElementById("playPauseButton");
@@ -26,25 +22,14 @@ const volumeSlider = document.getElementById("volumeSlider");
 const timeDisplay = document.getElementById("timeDisplay");
 
 /* ======================================================
-   CONFIG
+   STATE
 ====================================================== */
-
-const COUNTER_NAMESPACE = "mateee_xyz_global_counter";
-const COUNTER_KEY = "views";
-
-const STORAGE_VIEW_KEY = "mateee_view_counted_v3";
-const STORAGE_LAST_COUNT_KEY = "mateee_last_view_count_v3";
-const STORAGE_LOCK_KEY = "mateee_view_lock_v3";
-
-const COOKIE_VIEW_KEY = "mateee_view_counted";
-
-const LOCK_TIMEOUT = 3000;
 
 let videoStarted = false;
 let lastVolume = 0.5;
 
 /* ======================================================
-   SVG ICONS
+   SVG ICON PATHS
 ====================================================== */
 
 const svgPlay = `
@@ -76,16 +61,6 @@ function setIcon(svgElement, path) {
     svgElement.innerHTML = path;
 }
 
-function formatNumber(value) {
-    const number = Number(value);
-
-    if (!Number.isFinite(number)) {
-        return "...";
-    }
-
-    return number.toLocaleString("en-US");
-}
-
 function formatTime(seconds) {
     if (!Number.isFinite(seconds)) {
         return "0:00";
@@ -97,254 +72,6 @@ function formatTime(seconds) {
     return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
 }
 
-function showViewCounter() {
-    if (!viewCounter) return;
-    viewCounter.classList.add("visible");
-}
-
-function getCookie(name) {
-    const cookies = document.cookie.split(";");
-
-    for (const cookie of cookies) {
-        const [key, value] = cookie.trim().split("=");
-
-        if (key === name) {
-            return value;
-        }
-    }
-
-    return null;
-}
-
-function setCookie(name, value, maxAgeSeconds) {
-    const secure = location.protocol === "https:" ? "; Secure" : "";
-
-    document.cookie =
-        `${name}=${value}; max-age=${maxAgeSeconds}; path=/; SameSite=Lax${secure}`;
-}
-
-function safeLocalGet(key) {
-    try {
-        return localStorage.getItem(key);
-    } catch {
-        return null;
-    }
-}
-
-function safeLocalSet(key, value) {
-    try {
-        localStorage.setItem(key, value);
-    } catch {}
-}
-
-function safeLocalRemove(key) {
-    try {
-        localStorage.removeItem(key);
-    } catch {}
-}
-
-function safeSessionGet(key) {
-    try {
-        return sessionStorage.getItem(key);
-    } catch {
-        return null;
-    }
-}
-
-function safeSessionSet(key, value) {
-    try {
-        sessionStorage.setItem(key, value);
-    } catch {}
-}
-
-/* ======================================================
-   BOT FILTER
-====================================================== */
-
-function isLikelyBot() {
-    const ua = navigator.userAgent.toLowerCase();
-
-    const botKeywords = [
-        "bot",
-        "crawler",
-        "spider",
-        "slurp",
-        "facebookexternalhit",
-        "discordbot",
-        "telegrambot",
-        "whatsapp",
-        "linkedinbot",
-        "preview",
-        "embed",
-        "curl",
-        "wget",
-        "python",
-        "node-fetch"
-    ];
-
-    return botKeywords.some(keyword => ua.includes(keyword));
-}
-
-/* ======================================================
-   VIEW COUNTER LOCK
-====================================================== */
-
-function acquireViewLock() {
-    const now = Date.now();
-
-    const currentLock = safeLocalGet(STORAGE_LOCK_KEY);
-
-    if (currentLock) {
-        const lockTime = Number(currentLock);
-
-        if (Number.isFinite(lockTime) && now - lockTime < LOCK_TIMEOUT) {
-            return false;
-        }
-    }
-
-    safeLocalSet(STORAGE_LOCK_KEY, String(now));
-    return true;
-}
-
-function releaseViewLock() {
-    safeLocalRemove(STORAGE_LOCK_KEY);
-}
-
-/* ======================================================
-   COUNTER API
-====================================================== */
-
-async function fetchCounter(endpoint) {
-    const response = await fetch(endpoint, {
-        method: "GET",
-        cache: "no-store",
-        mode: "cors"
-    });
-
-    if (!response.ok) {
-        throw new Error(`Counter API returned ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (!data || typeof data.count === "undefined") {
-        throw new Error("Counter API response missing count");
-    }
-
-    return Number(data.count);
-}
-
-async function getCounterValue() {
-    const endpoint =
-        `https://api.counterapi.dev/v1/${COUNTER_NAMESPACE}/${COUNTER_KEY}`;
-
-    return fetchCounter(endpoint);
-}
-
-async function incrementCounterValue() {
-    const endpoint =
-        `https://api.counterapi.dev/v1/${COUNTER_NAMESPACE}/${COUNTER_KEY}/up`;
-
-    return fetchCounter(endpoint);
-}
-
-/* ======================================================
-   VIEW COUNTER INIT
-====================================================== */
-
-async function initViewCounter() {
-    if (!viewCount || !viewCounter) return;
-
-    showViewCounter();
-
-    const cachedCount = safeLocalGet(STORAGE_LAST_COUNT_KEY);
-
-    if (cachedCount) {
-        viewCount.textContent = formatNumber(cachedCount);
-    } else {
-        viewCount.textContent = "...";
-    }
-
-    if (isLikelyBot()) {
-        try {
-            const count = await getCounterValue();
-
-            viewCount.textContent = formatNumber(count);
-            safeLocalSet(STORAGE_LAST_COUNT_KEY, String(count));
-        } catch {
-            viewCount.textContent = cachedCount ? formatNumber(cachedCount) : "0";
-        }
-
-        return;
-    }
-
-    const hasSession = safeSessionGet(STORAGE_VIEW_KEY) === "true";
-    const hasLocal = safeLocalGet(STORAGE_VIEW_KEY) === "true";
-    const hasCookie = getCookie(COOKIE_VIEW_KEY) === "true";
-
-    const shouldIncrement =
-        !hasSession &&
-        !hasLocal &&
-        !hasCookie;
-
-    if (!shouldIncrement) {
-        try {
-            const count = await getCounterValue();
-
-            viewCount.textContent = formatNumber(count);
-            safeLocalSet(STORAGE_LAST_COUNT_KEY, String(count));
-        } catch {
-            viewCount.textContent = cachedCount ? formatNumber(cachedCount) : "0";
-        }
-
-        return;
-    }
-
-    const locked = acquireViewLock();
-
-    if (!locked) {
-        setTimeout(initViewCounter, LOCK_TIMEOUT + 250);
-        return;
-    }
-
-    try {
-        const count = await incrementCounterValue();
-
-        viewCount.textContent = formatNumber(count);
-
-        safeSessionSet(STORAGE_VIEW_KEY, "true");
-        safeLocalSet(STORAGE_VIEW_KEY, "true");
-        safeLocalSet(STORAGE_LAST_COUNT_KEY, String(count));
-
-        setCookie(COOKIE_VIEW_KEY, "true", 60 * 60 * 24 * 365);
-    } catch {
-        try {
-            const count = await getCounterValue();
-
-            viewCount.textContent = formatNumber(count);
-            safeLocalSet(STORAGE_LAST_COUNT_KEY, String(count));
-        } catch {
-            viewCount.textContent = cachedCount ? formatNumber(cachedCount) : "0";
-        }
-    } finally {
-        releaseViewLock();
-    }
-}
-
-/* ======================================================
-   CROSS-TAB SYNC
-====================================================== */
-
-window.addEventListener("storage", event => {
-    if (event.key === STORAGE_LAST_COUNT_KEY && event.newValue && viewCount) {
-        viewCount.textContent = formatNumber(event.newValue);
-    }
-});
-
-/* ======================================================
-   VIDEO TIME
-====================================================== */
-
 function updateTimeDisplay() {
     if (!video || !timeDisplay) return;
 
@@ -352,6 +79,22 @@ function updateTimeDisplay() {
     const duration = formatTime(video.duration);
 
     timeDisplay.textContent = `${current} / ${duration}`;
+}
+
+function updateVolumeIcon() {
+    if (!video || !volumeIcon) return;
+
+    if (video.muted || video.volume === 0) {
+        setIcon(volumeIcon, svgVolMute);
+        return;
+    }
+
+    if (video.volume < 0.5) {
+        setIcon(volumeIcon, svgVolLow);
+        return;
+    }
+
+    setIcon(volumeIcon, svgVolHigh);
 }
 
 /* ======================================================
@@ -427,6 +170,7 @@ async function startMedia() {
 
     await playVideo();
     updateVolumeIcon();
+    updateTimeDisplay();
 }
 
 /* ======================================================
@@ -473,22 +217,6 @@ function toggleMute() {
     updateVolumeIcon();
 }
 
-function updateVolumeIcon() {
-    if (!video || !volumeIcon) return;
-
-    if (video.muted || video.volume === 0) {
-        setIcon(volumeIcon, svgVolMute);
-        return;
-    }
-
-    if (video.volume < 0.5) {
-        setIcon(volumeIcon, svgVolLow);
-        return;
-    }
-
-    setIcon(volumeIcon, svgVolHigh);
-}
-
 /* ======================================================
    KEYBOARD CONTROLS
 ====================================================== */
@@ -502,6 +230,7 @@ function handleKeyboard(event) {
     }
 
     if (event.key.toLowerCase() === "m") {
+        event.preventDefault();
         toggleMute();
     }
 }
@@ -524,14 +253,49 @@ function optimizeVideoForDevice() {
 }
 
 /* ======================================================
+   HARD BLOCK SELECTION / DRAGGING
+====================================================== */
+
+function blockSelectionAndDragging() {
+    document.addEventListener("selectstart", function (event) {
+        event.preventDefault();
+    });
+
+    document.addEventListener("dragstart", function (event) {
+        event.preventDefault();
+    });
+
+    document.addEventListener("mousedown", function (event) {
+        const allowedInteractive =
+            event.target === volumeSlider ||
+            event.target.closest(".volume-slider");
+
+        if (!allowedInteractive) {
+            event.preventDefault();
+        }
+    });
+
+    document.addEventListener("touchstart", function () {
+        if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        }
+    }, { passive: true });
+
+    document.addEventListener("touchend", function () {
+        if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        }
+    }, { passive: true });
+}
+
+/* ======================================================
    EVENTS
 ====================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
     setViewportHeightVariable();
     optimizeVideoForDevice();
-
-    initViewCounter();
+    blockSelectionAndDragging();
 
     setIcon(playPauseIcon, svgPause);
     setIcon(volumeIcon, svgVolHigh);
@@ -575,6 +339,7 @@ if (video) {
 document.addEventListener("keydown", handleKeyboard);
 
 window.addEventListener("resize", setViewportHeightVariable);
+
 window.addEventListener("orientationchange", () => {
     setTimeout(setViewportHeightVariable, 250);
 });
