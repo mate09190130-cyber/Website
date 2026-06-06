@@ -2,6 +2,8 @@
    mateee.xyz - Javascript.js
 ====================================================== */
 
+"use strict";
+
 /* ======================================================
    ELEMENTS
 ====================================================== */
@@ -57,12 +59,12 @@ const svgVolMute = `
 ====================================================== */
 
 function setIcon(svgElement, path) {
-    if (!svgElement) return;
+    if (!svgElement || typeof path !== "string") return;
     svgElement.innerHTML = path;
 }
 
 function formatTime(seconds) {
-    if (!Number.isFinite(seconds)) {
+    if (!Number.isFinite(seconds) || seconds < 0) {
         return "0:00";
     }
 
@@ -70,6 +72,16 @@ function formatTime(seconds) {
     const secs = Math.floor(seconds % 60);
 
     return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+}
+
+function getSafeVolumeValue(value, fallback = 0.5) {
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+        return fallback;
+    }
+
+    return Math.min(1, Math.max(0, number));
 }
 
 function updateTimeDisplay() {
@@ -81,13 +93,33 @@ function updateTimeDisplay() {
     timeDisplay.textContent = `${current} / ${duration}`;
 }
 
+function updatePlayPauseButtonState() {
+    if (!video || !playPauseButton || !playPauseIcon) return;
+
+    if (video.paused) {
+        setIcon(playPauseIcon, svgPlay);
+        playPauseButton.setAttribute("aria-label", "Play video");
+        playPauseButton.setAttribute("title", "Play");
+        return;
+    }
+
+    setIcon(playPauseIcon, svgPause);
+    playPauseButton.setAttribute("aria-label", "Pause video");
+    playPauseButton.setAttribute("title", "Pause");
+}
+
 function updateVolumeIcon() {
-    if (!video || !volumeIcon) return;
+    if (!video || !volumeIcon || !muteButton) return;
 
     if (video.muted || video.volume === 0) {
         setIcon(volumeIcon, svgVolMute);
+        muteButton.setAttribute("aria-label", "Unmute video");
+        muteButton.setAttribute("title", "Unmute");
         return;
     }
+
+    muteButton.setAttribute("aria-label", "Mute video");
+    muteButton.setAttribute("title", "Mute");
 
     if (video.volume < 0.5) {
         setIcon(volumeIcon, svgVolLow);
@@ -95,6 +127,12 @@ function updateVolumeIcon() {
     }
 
     setIcon(volumeIcon, svgVolHigh);
+}
+
+function syncVolumeSlider() {
+    if (!video || !volumeSlider) return;
+
+    volumeSlider.value = video.muted ? "0" : String(video.volume);
 }
 
 /* ======================================================
@@ -106,14 +144,26 @@ async function playVideo() {
 
     try {
         await video.play();
-        setIcon(playPauseIcon, svgPause);
     } catch {
         try {
             video.muted = true;
             await video.play();
-            setIcon(playPauseIcon, svgPause);
-            updateVolumeIcon();
-        } catch {}
+        } catch {
+            videoStarted = false;
+
+            if (overlay) {
+                overlay.classList.remove("hidden");
+            }
+
+            if (playerControls) {
+                playerControls.classList.remove("visible");
+            }
+        }
+    } finally {
+        updatePlayPauseButtonState();
+        updateVolumeIcon();
+        syncVolumeSlider();
+        updateTimeDisplay();
     }
 }
 
@@ -121,11 +171,16 @@ function pauseVideo() {
     if (!video) return;
 
     video.pause();
-    setIcon(playPauseIcon, svgPlay);
+    updatePlayPauseButtonState();
 }
 
 function togglePlayPause() {
     if (!video) return;
+
+    if (!videoStarted) {
+        startMedia();
+        return;
+    }
 
     if (video.paused) {
         playVideo();
@@ -159,18 +214,23 @@ async function startMedia() {
         window.matchMedia("(max-width: 768px)").matches ||
         /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+    const sliderValue = volumeSlider ? getSafeVolumeValue(volumeSlider.value) : 0.5;
+
     if (isMobile) {
         video.volume = 1;
         video.muted = false;
+        lastVolume = 1;
     } else {
-        const sliderValue = volumeSlider ? Number(volumeSlider.value) : 0.5;
-        video.volume = Number.isFinite(sliderValue) ? sliderValue : 0.5;
-        video.muted = false;
+        video.volume = sliderValue;
+        video.muted = sliderValue === 0;
+
+        if (sliderValue > 0) {
+            lastVolume = sliderValue;
+        }
     }
 
+    syncVolumeSlider();
     await playVideo();
-    updateVolumeIcon();
-    updateTimeDisplay();
 }
 
 /* ======================================================
@@ -180,7 +240,7 @@ async function startMedia() {
 function updateVolume(value) {
     if (!video) return;
 
-    const vol = Math.min(1, Math.max(0, Number(value)));
+    const vol = getSafeVolumeValue(value);
 
     video.volume = vol;
     video.muted = vol === 0;
@@ -190,31 +250,24 @@ function updateVolume(value) {
     }
 
     updateVolumeIcon();
+    syncVolumeSlider();
 }
 
 function toggleMute() {
     if (!video) return;
 
     if (video.muted || video.volume === 0) {
-        const restoreVolume = lastVolume || 0.5;
+        const restoreVolume = getSafeVolumeValue(lastVolume || 0.5);
 
         video.muted = false;
         video.volume = restoreVolume;
-
-        if (volumeSlider) {
-            volumeSlider.value = restoreVolume;
-        }
     } else {
         lastVolume = video.volume || 0.5;
-
         video.muted = true;
-
-        if (volumeSlider) {
-            volumeSlider.value = 0;
-        }
     }
 
     updateVolumeIcon();
+    syncVolumeSlider();
 }
 
 /* ======================================================
@@ -224,12 +277,15 @@ function toggleMute() {
 function handleKeyboard(event) {
     if (!videoStarted) return;
 
-    if (event.code === "Space") {
+    const activeElement = document.activeElement;
+    const isRangeFocused = activeElement && activeElement.matches && activeElement.matches('input[type="range"]');
+
+    if (event.code === "Space" && !isRangeFocused) {
         event.preventDefault();
         togglePlayPause();
     }
 
-    if (event.key.toLowerCase() === "m") {
+    if (event.key && event.key.toLowerCase() === "m") {
         event.preventDefault();
         toggleMute();
     }
@@ -253,7 +309,7 @@ function optimizeVideoForDevice() {
 }
 
 /* ======================================================
-   HARD BLOCK SELECTION / DRAGGING
+   BLOCK SELECTION / DRAGGING
 ====================================================== */
 
 function blockSelectionAndDragging() {
@@ -266,9 +322,7 @@ function blockSelectionAndDragging() {
     });
 
     document.addEventListener("mousedown", function (event) {
-        const allowedInteractive =
-            event.target === volumeSlider ||
-            event.target.closest(".volume-slider");
+        const allowedInteractive = event.target.closest("a, button, input, .volume-slider");
 
         if (!allowedInteractive) {
             event.preventDefault();
@@ -297,9 +351,15 @@ document.addEventListener("DOMContentLoaded", () => {
     optimizeVideoForDevice();
     blockSelectionAndDragging();
 
-    setIcon(playPauseIcon, svgPause);
-    setIcon(volumeIcon, svgVolHigh);
+    if (volumeSlider && video) {
+        video.volume = getSafeVolumeValue(volumeSlider.value);
+        video.muted = true;
+        lastVolume = getSafeVolumeValue(volumeSlider.value);
+    }
 
+    updatePlayPauseButtonState();
+    updateVolumeIcon();
+    syncVolumeSlider();
     updateTimeDisplay();
 });
 
@@ -323,17 +383,16 @@ if (volumeSlider) {
 
 if (video) {
     video.addEventListener("loadedmetadata", updateTimeDisplay);
+    video.addEventListener("durationchange", updateTimeDisplay);
     video.addEventListener("timeupdate", updateTimeDisplay);
 
-    video.addEventListener("play", () => {
-        setIcon(playPauseIcon, svgPause);
-    });
+    video.addEventListener("play", updatePlayPauseButtonState);
+    video.addEventListener("pause", updatePlayPauseButtonState);
 
-    video.addEventListener("pause", () => {
-        setIcon(playPauseIcon, svgPlay);
+    video.addEventListener("volumechange", () => {
+        updateVolumeIcon();
+        syncVolumeSlider();
     });
-
-    video.addEventListener("volumechange", updateVolumeIcon);
 }
 
 document.addEventListener("keydown", handleKeyboard);
@@ -341,7 +400,7 @@ document.addEventListener("keydown", handleKeyboard);
 window.addEventListener("resize", setViewportHeightVariable);
 
 window.addEventListener("orientationchange", () => {
-    setTimeout(setViewportHeightVariable, 250);
+    window.setTimeout(setViewportHeightVariable, 250);
 });
 
 /* ======================================================
