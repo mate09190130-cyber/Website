@@ -105,11 +105,14 @@ a {
     text-decoration: none;
 }
 
+button:focus,
 button:focus-visible,
+a:focus,
 a:focus-visible,
+input:focus,
 input:focus-visible {
-    outline: 2px solid rgba(255, 255, 255, 0.92);
-    outline-offset: 5px;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 noscript {
@@ -200,6 +203,8 @@ noscript {
 
     opacity: 1;
     visibility: visible;
+
+    cursor: pointer;
 
     transition:
         opacity 0.65s ease,

@@ -210,23 +210,13 @@ async function startMedia() {
 
     video.currentTime = 0;
 
-    const isMobile =
-        window.matchMedia("(max-width: 768px)").matches ||
-        /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
     const sliderValue = volumeSlider ? getSafeVolumeValue(volumeSlider.value) : 0.5;
 
-    if (isMobile) {
-        video.volume = 1;
-        video.muted = false;
-        lastVolume = 1;
-    } else {
-        video.volume = sliderValue;
-        video.muted = sliderValue === 0;
+    video.volume = sliderValue;
+    video.muted = sliderValue === 0;
 
-        if (sliderValue > 0) {
-            lastVolume = sliderValue;
-        }
+    if (sliderValue > 0) {
+        lastVolume = sliderValue;
     }
 
     syncVolumeSlider();
@@ -275,15 +265,17 @@ function toggleMute() {
 ====================================================== */
 
 function handleKeyboard(event) {
-    if (!videoStarted) return;
-
-    const activeElement = document.activeElement;
-    const isRangeFocused = activeElement && activeElement.matches && activeElement.matches('input[type="range"]');
-
-    if (event.code === "Space" && !isRangeFocused) {
+    if (event.code === "Tab" || event.code === "Space") {
         event.preventDefault();
-        togglePlayPause();
+
+        if (document.activeElement && document.activeElement.blur) {
+            document.activeElement.blur();
+        }
+
+        return;
     }
+
+    if (!videoStarted) return;
 
     if (event.key && event.key.toLowerCase() === "m") {
         event.preventDefault();
@@ -313,6 +305,11 @@ function optimizeVideoForDevice() {
 ====================================================== */
 
 function blockSelectionAndDragging() {
+    document.querySelectorAll("a, button, input").forEach(element => {
+        element.setAttribute("tabindex", "-1");
+        element.addEventListener("focus", () => element.blur());
+    });
+
     document.addEventListener("selectstart", function (event) {
         event.preventDefault();
     });
@@ -352,9 +349,11 @@ document.addEventListener("DOMContentLoaded", () => {
     blockSelectionAndDragging();
 
     if (volumeSlider && video) {
-        video.volume = getSafeVolumeValue(volumeSlider.value);
-        video.muted = true;
-        lastVolume = getSafeVolumeValue(volumeSlider.value);
+        const initialVolume = getSafeVolumeValue(volumeSlider.value);
+
+        video.volume = initialVolume;
+        video.muted = initialVolume === 0;
+        lastVolume = initialVolume > 0 ? initialVolume : 0.5;
     }
 
     updatePlayPauseButtonState();
@@ -363,8 +362,19 @@ document.addEventListener("DOMContentLoaded", () => {
     updateTimeDisplay();
 });
 
+if (overlay) {
+    overlay.addEventListener("pointerdown", event => {
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+        event.preventDefault();
+        startMedia();
+    });
+}
+
 if (enterButton) {
-    enterButton.addEventListener("click", startMedia);
+    enterButton.addEventListener("click", event => {
+        event.preventDefault();
+        startMedia();
+    });
 }
 
 if (playPauseButton) {
