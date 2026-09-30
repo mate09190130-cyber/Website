@@ -11,7 +11,9 @@
     --dark-glass: rgba(0, 0, 0, 0.72);
     --dark-glass-hover: rgba(0, 0, 0, 0.88);
     --shadow-strong: 0 8px 30px rgba(0, 0, 0, 0.75);
-    --text-shadow-main: 0 4px 18px rgba(0, 0, 0, 1), 0 0 8px rgba(0, 0, 0, 0.9);
+    --text-shadow-main:
+        0 4px 18px rgba(0, 0, 0, 1),
+        0 0 8px rgba(0, 0, 0, 0.9);
     --transition-fast: 0.25s ease;
 }
 
@@ -44,6 +46,7 @@ html {
     width: 100%;
     height: 100%;
     background: #000;
+
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
 }
@@ -51,6 +54,7 @@ html {
 body {
     width: 100%;
     min-width: 320px;
+
     min-height: 100vh;
     min-height: calc(var(--vh, 1vh) * 100);
     min-height: 100dvh;
@@ -156,6 +160,7 @@ noscript {
     inset: 0;
 
     width: 100vw;
+
     height: 100vh;
     height: calc(var(--vh, 1vh) * 100);
     height: 100dvh;
@@ -169,9 +174,10 @@ noscript {
 
     background: #000;
 
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-
+    /*
+     * Avoid unnecessary GPU transforms on mobile browsers.
+     * The video is already fixed and full-screen.
+     */
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
 }
@@ -181,12 +187,17 @@ noscript {
     inset: 0;
 
     width: 100vw;
+
     height: 100vh;
     height: calc(var(--vh, 1vh) * 100);
     height: 100dvh;
 
     background:
-        radial-gradient(circle at center, rgba(0, 0, 0, 0.12) 0%, rgba(0, 0, 0, 0.44) 100%),
+        radial-gradient(
+            circle at center,
+            rgba(0, 0, 0, 0.12) 0%,
+            rgba(0, 0, 0, 0.44) 100%
+        ),
         rgba(0, 0, 0, 0.24);
 
     z-index: 2;
@@ -209,6 +220,7 @@ noscript {
     justify-content: center;
 
     width: 100vw;
+
     height: 100vh;
     height: calc(var(--vh, 1vh) * 100);
     height: 100dvh;
@@ -246,7 +258,8 @@ noscript {
 
     cursor: pointer;
 
-    text-shadow: 0 2px 12px rgba(255, 255, 255, 0.25);
+    text-shadow:
+        0 2px 12px rgba(255, 255, 255, 0.25);
 
     transition:
         transform var(--transition-fast),
@@ -256,7 +269,9 @@ noscript {
 
 .enter-button:hover {
     transform: scale(1.045);
-    text-shadow: 0 0 16px rgba(255, 255, 255, 0.45);
+
+    text-shadow:
+        0 0 16px rgba(255, 255, 255, 0.45);
 }
 
 .enter-button:active {
@@ -274,6 +289,7 @@ noscript {
 
     width: 100vw;
     max-width: 100%;
+
     height: 100vh;
     height: calc(var(--vh, 1vh) * 100);
     height: 100dvh;
@@ -537,7 +553,8 @@ noscript {
 
     cursor: pointer;
 
-    transition: background var(--transition-fast);
+    transition:
+        background var(--transition-fast);
 }
 
 .volume-slider:hover {
@@ -557,9 +574,11 @@ noscript {
 
     cursor: pointer;
 
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.75);
+    box-shadow:
+        0 0 8px rgba(0, 0, 0, 0.75);
 
-    transition: transform var(--transition-fast);
+    transition:
+        transform var(--transition-fast);
 }
 
 .volume-slider::-webkit-slider-thumb:hover {
@@ -577,7 +596,8 @@ noscript {
 
     cursor: pointer;
 
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.75);
+    box-shadow:
+        0 0 8px rgba(0, 0, 0, 0.75);
 }
 
 .volume-slider::-moz-range-track {
@@ -599,7 +619,11 @@ noscript {
 
     .video-overlay {
         background:
-            radial-gradient(circle at center, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.5) 100%),
+            radial-gradient(
+                circle at center,
+                rgba(0, 0, 0, 0.14) 0%,
+                rgba(0, 0, 0, 0.5) 100%
+            ),
             rgba(0, 0, 0, 0.18);
     }
 
